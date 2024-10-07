@@ -9,9 +9,6 @@ P4 = [2, 4, 3, 1]  # P4 置换表
 SBox1 = [[1, 0, 3, 2], [3, 2, 1, 0], [0, 2, 1, 3], [3, 1, 0, 2]]  # SBox1
 SBox2 = [[0, 1, 2, 3], [2, 3, 1, 0], [3, 0, 1, 2], [2, 1, 0, 3]]  # SBox2
 
-class SDES:
-    def __init__(self, key):
-        self.key = key
 
     # 置换函数
 def permute(input_bits, permutation_table):
