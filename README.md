@@ -54,58 +54,55 @@ S-DES（Simplified DES）是一种对称加密算法，由IBM于1999年提出，
 ### 第4关：暴力破解
 假设你找到了使用相同密钥的明、密文对(一个或多个)，请尝试使用暴力破解的方法找到正确的密钥Key。
 （1）代码实现
-# brute_force.py
 
-import itertools
-import time
-from threading import Thread
-from sdes import decrypt, string_to_bits, bits_to_string
+    import itertools
+    import time
+    from threading import Thread
+    from sdes import decrypt, string_to_bits, bits_to_string
 
-# 设定的明文和密文对
-known_plaintext = "HELLO"  # 替换为实际的明文
-known_ciphertext = "Ï"  # 替换为实际的密文
+    known_plaintext = "HELLO"  # 替换为实际的明文
+    known_ciphertext = "Ï"  # 替换为实际的密文
 
-# 转换明文和密文为位列表
-plaintext_bits = string_to_bits(known_plaintext)[0]  # 获取明文的位
-ciphertext_bits = string_to_bits(known_ciphertext)[0]  # 替换为相应的密文位
+    plaintext_bits = string_to_bits(known_plaintext)[0]  # 获取明文的位
+    ciphertext_bits = string_to_bits(known_ciphertext)[0]  # 替换为相应的密文位
 
-def try_key(key):
-    # 使用给定的密钥解密密文
-    decrypted_bits = decrypt(ciphertext_bits, key)
+    def try_key(key):
+        # 使用给定的密钥解密密文
+        decrypted_bits = decrypt(ciphertext_bits, key)
     
-    # 验证解密出的明文是否与已知明文相同
-    if decrypted_bits == plaintext_bits:
-        print(f"找到密钥：{''.join(map(str, key))}")
-        return True
-    return False
+        # 验证解密出的明文是否与已知明文相同
+        if decrypted_bits == plaintext_bits:
+            print(f"找到密钥：{''.join(map(str, key))}")
+            return True
+        return False
 
-def brute_force_decrypt(start, end):
-    for i in range(start, end):
-        key = [int(bit) for bit in f'{i:010b}']  # 生成 10 位二进制密钥
-        if try_key(key):
-            break
+    def brute_force_decrypt(start, end):
+        for i in range(start, end):
+            key = [int(bit) for bit in f'{i:010b}']  # 生成 10 位二进制密钥
+            if try_key(key):
+                break
 
-if __name__ == "__main__":
-    start_time = time.time()  # 记录开始时间
+    if __name__ == "__main__":
+        start_time = time.time()  # 记录开始时间
     
-    # 设置线程数
-    num_threads = 4
-    threads = []
-    keys_per_thread = 1024 // num_threads  # 每个线程处理的密钥范围
+        # 设置线程数
+        num_threads = 4
+        threads = []
+        keys_per_thread = 1024 // num_threads  # 每个线程处理的密钥范围
 
-    for t in range(num_threads):
-        start = t * keys_per_thread
-        end = (t + 1) * keys_per_thread
-        thread = Thread(target=brute_force_decrypt, args=(start, end))
-        threads.append(thread)
-        thread.start()
+        for t in range(num_threads):
+            start = t * keys_per_thread
+            end = (t + 1) * keys_per_thread
+            thread = Thread(target=brute_force_decrypt, args=(start, end))
+            threads.append(thread)
+            thread.start()
 
-    # 等待所有线程完成
-    for thread in threads:
-        thread.join()
+        # 等待所有线程完成
+        for thread in threads:
+            thread.join()
 
-    end_time = time.time()  # 记录结束时间
-    print(f"暴力破解完成，耗时: {end_time - start_time:.2f} 秒")
+        end_time = time.time()  # 记录结束时间
+        print(f"暴力破解完成，耗时: {end_time - start_time:.2f} 秒")
     
     
 （2）运行结果
@@ -114,37 +111,39 @@ if __name__ == "__main__":
 
 ### 第5关：封闭测试
 （1）代码实现
-import itertools
-from sdes import encrypt, string_to_bits
 
-def generate_keys():
-    # 生成所有可能的 10 位二进制密钥
-    for i in range(1024):  # 0 到 1023，共 1024 个可能的密钥
+    import itertools
+    from sdes import encrypt, string_to_bits
+
+    def generate_keys():
+        # 生成所有可能的 10 位二进制密钥
+        for i in range(1024):  # 0 到 1023，共 1024 个可能的密钥
         yield [int(bit) for bit in f'{i:010b}']  # 转换为 10 位二进制列表
 
-def closed_test(plaintext):
-    ciphertexts = {}  # 用于记录密文及其对应的密钥
+    def closed_test(plaintext):
+        ciphertexts = {}  # 用于记录密文及其对应的密钥
 
-    for key in generate_keys():
-        # 使用当前密钥加密明文
-        bits_plaintext = string_to_bits(plaintext)[0]  # 转换明文为位
-        ciphertext = encrypt(bits_plaintext, key)  # 进行加密
+        for key in generate_keys():
+            # 使用当前密钥加密明文
+            bits_plaintext = string_to_bits(plaintext)[0]  # 转换明文为位
+            ciphertext = encrypt(bits_plaintext, key)  # 进行加密
 
-        # 将密文转换为字符串格式以便于比较
-        cipher_str = ''.join(map(str, ciphertext))
+            # 将密文转换为字符串格式以便于比较
+            cipher_str = ''.join(map(str, ciphertext))
         
-        # 如果该密文已经存在列表中，打印原明文和不同密钥
-        if cipher_str in ciphertexts:
-            print(f"相同密文: {cipher_str}")
-            print(f"明文: {plaintext} 使用密钥: {ciphertexts[cipher_str]} 生成相同密文")
-            print(f"新的密钥: {key}")
-        else:
-            ciphertexts[cipher_str] = key  # 将密文和密钥存进字典
+            # 如果该密文已经存在列表中，打印原明文和不同密钥
+            if cipher_str in ciphertexts:
+                print(f"相同密文: {cipher_str}")
+                print(f"明文: {plaintext} 使用密钥: {ciphertexts[cipher_str]} 生成相同密文")
+                print(f"新的密钥: {key}")
+            else:
+                ciphertexts[cipher_str] = key  # 将密文和密钥存进字典
 
-if __name__ == "__main__":
+    if __name__ == "__main__":
     # 测试的明文
-    test_plaintext = "HELLO"  # 替换为您想要测试的明文
-    closed_test(test_plaintext)
+        test_plaintext = "HELLO"  # 替换为您想要测试的明文
+        closed_test(test_plaintext)
+    
 （2）运行结果
 ![e634d1fdbcc3f97ecdf9e33784ef07a4](https://github.com/user-attachments/assets/d5795c7f-0065-40bb-8eb6-9e6cc6b7c3e9)
 
@@ -153,6 +152,6 @@ if __name__ == "__main__":
 本次实验主要是对S-DES算法的实现和测试，包括基本测试、交叉测试、ASCII字符串加密解密、暴力破解、封闭测试等。完成了实验的基本要求
 
 ## 开发团队
-   -小组：智慧组
-   -成员：杨大浩、齐浩男
-   -单位：重庆大学大数据与软件学院
+- 小组：智慧组
+- 成员：杨大浩、齐浩男
+- 单位：重庆大学大数据与软件学院
